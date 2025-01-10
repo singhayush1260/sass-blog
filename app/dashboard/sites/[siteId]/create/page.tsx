@@ -25,23 +25,27 @@ import SubmitButton from "@/app/components/dashboard/submit-button";
 import { createPostAction } from "@/app/actions";
 import slugify from "react-slugify";
 
-const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
-  const {siteId}=use(params);
+const CreateArticlePage = ({
+  params,
+}: {
+  params: Promise<{ siteId: string }>;
+}) => {
+  const { siteId } = use(params);
   const [imageUrl, setImageUrl] = useState<undefined | string>(undefined);
   const [value, setValue] = useState<JSONContent | undefined>(undefined);
   const [slug, setSlugValue] = useState<undefined | string>(undefined);
   const [title, setTitle] = useState<undefined | string>(undefined);
-  const[lastResult,action]=useActionState(createPostAction,undefined);
-  const [form, fields]=useForm({
+  const [lastResult, action] = useActionState(createPostAction, undefined);
+  const [form, fields] = useForm({
     lastResult,
-    onValidate({formData}){
-      return parseWithZod(formData,{schema:PostSchema})
+    onValidate({ formData }) {
+      return parseWithZod(formData, { schema: PostSchema });
     },
-    shouldValidate:"onBlur",
-    shouldRevalidate:"onInput"
+    shouldValidate: "onBlur",
+    shouldRevalidate: "onInput",
   });
 
-  const generateSlug=()=>{
+  const generateSlug = () => {
     const titleInput = title;
 
     if (titleInput?.length === 0 || titleInput === undefined) {
@@ -51,20 +55,19 @@ const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
     setSlugValue(slugify(titleInput));
 
     return toast.success("Slug has been created");
-  }
+  };
 
-
-  return(
+  return (
     <>
-        <div className="flex items-center">
+      <div className="flex items-center">
         <Button size="icon" variant="outline" className="mr-3" asChild>
           <Link href={`/dashboard/sites/${siteId}`}>
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
         <h1 className="text-xl font-semibold">Create Article</h1>
-        </div>
-        <Card>
+      </div>
+      <Card>
         <CardHeader>
           <CardTitle>Article Details</CardTitle>
           <CardDescription>
@@ -72,7 +75,12 @@ const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <form id={form.id} onSubmit={form.onSubmit} action={action}  className="flex flex-col gap-6">
+          <form
+            id={form.id}
+            onSubmit={form.onSubmit}
+            action={action}
+            className="flex flex-col gap-6"
+          >
             <input type="hidden" name="siteId" value={siteId} />
             <div className="grid gap-2">
               <Label>Title</Label>
@@ -82,22 +90,21 @@ const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
                 defaultValue={fields.title.initialValue}
                 placeholder="Nextjs blogging application"
                 onChange={(e) => setTitle(e.target.value)}
-                value={title}
+                value={title || ""}
               />
               <p className="text-red-500 text-sm">{fields.title.errors}</p>
             </div>
             <div className="grid gap-2">
               <Label>Slug</Label>
               <Input
-                 key={fields.slug.key}
-                 name={fields.slug.name}
-                 defaultValue={fields.slug.initialValue}
-                 placeholder="Article Slug"
-                 onChange={(e) => setSlugValue(e.target.value)}
-                 value={slug}
+                key={fields.slug.key}
+                name={fields.slug.name}
+                defaultValue={fields.slug.initialValue}
+                placeholder="Article Slug"
+                onChange={(e) => setSlugValue(e.target.value)}
+                value={slug  || ""}
               />
-               <Button
-                
+              <Button
                 className="w-fit"
                 variant="secondary"
                 type="button"
@@ -113,23 +120,23 @@ const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
                 key={fields.smallDescription.key}
                 name={fields.smallDescription.name}
                 defaultValue={fields.smallDescription.initialValue}
-                 placeholder="Small Description for your blog article..."
-                 className="h-32"
+                placeholder="Small Description for your blog article..."
+                className="h-32"
               />
               <p className="text-red-500 text-sm">
                 {fields.smallDescription.errors}
               </p>
             </div>
             <div className="grid gap-2">
-            <Label>Cover Image</Label>
-            <input
+              <Label>Cover Image</Label>
+              <input
                 type="hidden"
                 name={fields.coverImage.name}
                 key={fields.coverImage.key}
                 defaultValue={fields.coverImage.initialValue}
-                value={imageUrl}
+                value={imageUrl  || ""}
               />
-            {imageUrl ? (
+              {imageUrl ? (
                 <Image
                   src={imageUrl}
                   alt="Uploaded Image"
@@ -149,27 +156,27 @@ const CreateArticlePage=({params}:{params:Promise<{siteId:string}>})=>{
                   }}
                 />
               )}
-                <p className="text-red-500 text-sm">{fields.coverImage.errors}</p>
+              <p className="text-red-500 text-sm">{fields.coverImage.errors}</p>
             </div>
             <div className="grid gap-2">
-            <Label>Content</Label>
-            <input
+              <Label>Content</Label>
+              <input
                 type="hidden"
                 name={fields.articleContent.name}
                 key={fields.articleContent.key}
                 defaultValue={fields.articleContent.initialValue}
                 value={JSON.stringify(value)}
               />
-            <TailwindEditor initialValue={value} onChange={setValue}/>
-            <p className="text-red-500 text-sm">
+              <TailwindEditor initialValue={value} onChange={setValue} />
+              <p className="text-red-500 text-sm">
                 {fields.articleContent.errors}
               </p>
             </div>
             <SubmitButton text="Create Article" />
-            </form>
-            </CardContent>  
-        </Card>
+          </form>
+        </CardContent>
+      </Card>
     </>
-)
-}
+  );
+};
 export default CreateArticlePage;

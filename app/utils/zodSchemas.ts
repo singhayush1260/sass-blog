@@ -1,3 +1,4 @@
+import { conformZodMessage } from "@conform-to/zod";
 import { z } from "zod";
 
 export const SiteSchema = z.object({
@@ -14,6 +15,37 @@ export const PostSchema = z.object({
   articleContent: z.string().min(1),
 });
 
-export function SiteCreationSchema(){
-    
+export function SiteCreationSchema(options?: {
+  isSubdirectoryUnique: () => Promise<Boolean>;
+}) {
+  return z.object({
+    subdirectory: z
+      .string()
+      .min(1)
+      .max(40)
+      .regex(/^[a-z]+$/, "Only lowercase characters allowed")
+      .transform(value=>value.toLowerCase())
+      .pipe(
+        z.string().superRefine((email,ctx)=>{
+          if(typeof options?.isSubdirectoryUnique!=="function"){
+            ctx.addIssue({
+              code:"custom",
+              message:conformZodMessage.VALIDATION_UNDEFINED,
+              fatal:true
+            });
+            return; 
+          }
+          return options.isSubdirectoryUnique().then((isUnique)=>{
+            if(!isUnique){
+              ctx.addIssue({
+                code:"custom",
+                message:"Subdirectory already taken",
+              });
+            }
+          })
+        })
+      ),
+      name: z.string().min(1).max(35),
+      description: z.string().min(1).max(150),
+  });
 }

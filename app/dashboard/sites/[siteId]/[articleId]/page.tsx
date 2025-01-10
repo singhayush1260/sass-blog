@@ -1,3 +1,4 @@
+import EditArticleForm from "@/app/components/dashboard/forms/edit-article-form";
 import prisma from "@/app/utils/db";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -44,7 +45,7 @@ return(
       <h1 className="text-2xl font-semibold">Edit Article</h1>
     </div>
 
-    {/* <EditArticleForm data={data} siteId={siteId} /> */}
+    <EditArticleForm data={data} siteId={siteId} />
   </div>
 )
 

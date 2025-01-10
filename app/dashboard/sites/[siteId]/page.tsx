@@ -99,14 +99,14 @@ const SitePage = async ({
     <>
       <div className="flex w-full justify-end gap-x-4">
         <Button asChild variant="secondary">
-          <Link href="#">
+          <Link href={`/blog/${data?.subdirectory}`}>
             <Book className="w-4 mr-1" />
             View Blog
           </Link>
         </Button>
 
         <Button asChild variant="secondary">
-          <Link href="#">
+          <Link href={`/dashboard/sites/${siteId}/settings`}>
             <Settings className="w-4 mr-1" />
             Settings
           </Link>
@@ -119,7 +119,7 @@ const SitePage = async ({
           </Link>
         </Button>
       </div>
-      {data === undefined || data?.length === 0 ? (
+      {data === undefined || data?.posts.length === 0 ? (
         <EmptyState
           title="You dont have any Articles created"
           description="You currently dont have any articles. please create some so that you can see them right here"
