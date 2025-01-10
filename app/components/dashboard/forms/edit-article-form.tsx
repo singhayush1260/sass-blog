@@ -22,7 +22,7 @@ import { JSONContent } from "novel";
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import { PostSchema } from "@/app/utils/zodSchemas";
-import { createPostAction, editPostActions } from "@/app/actions";
+import { editPostActions } from "@/app/actions";
 import slugify from "react-slugify";
 
 
@@ -31,7 +31,7 @@ interface iAppProps {
       slug: string;
       title: string;
       smallDescription: string;
-      articleContent: any;
+      articleContent: JSONContent | undefined;
       id: string;
       image: string;
     };

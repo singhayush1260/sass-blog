@@ -8,7 +8,6 @@ import {
 import EmptyState from "../components/dashboard/empty-state";
 import prisma from "../utils/db";
 import { requireUser } from "../utils/requireUser";
-import SitesRoute from "./sites/page";
 import Image from "next/image";
 import Defaultimage from "@/public/default.png";
 import { Button } from "@/components/ui/button";

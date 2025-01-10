@@ -2,27 +2,84 @@
 import { requireUser } from "./utils/requireUser";
 import { parseWithZod } from "@conform-to/zod";
 import prisma from "./utils/db";
-import { PostSchema, SiteCreationSchema, SiteSchema } from "./utils/zodSchemas"
+import { PostSchema, SiteCreationSchema } from "./utils/zodSchemas"
 import { redirect } from "next/navigation";
-export async function createSiteAction(prevState: any, formData: FormData){
+import { stripe } from "./utils/stripe";
+
+export async function createSiteAction(prevState: unknown, formData: FormData){
     const user = await requireUser();
-    const submission=await parseWithZod(formData,{
-        schema:SiteCreationSchema({
-          async isSubdirectoryUnique(){
+    
+    const [subStatus, sites] = await Promise.all([
+      prisma.subscription.findUnique({
+        where: {
+          userId: user.id,
+        },
+        select: {
+          status: true,
+        },
+      }),
+      prisma.site.findMany({
+        where: {
+          userId: user.id,
+        },
+      }),
+    ]);
+    if (!subStatus || subStatus.status !== "active") {
+      if (sites.length < 1) {
+        // Allow creating a site
+        const submission = await parseWithZod(formData, {
+          schema: SiteCreationSchema({
+            async isSubdirectoryUnique() {
+              const exisitngSubDirectory = await prisma.site.findUnique({
+                where: {
+                  subdirectory: formData.get("subdirectory") as string,
+                },
+              });
+              return !exisitngSubDirectory;
+            },
+          }),
+          async: true,
+        });
+  
+        if (submission.status !== "success") {
+          return submission.reply();
+        }
+  
+        await prisma.site.create({
+          data: {
+            description: submission.value.description,
+            name: submission.value.name,
+            subdirectory: submission.value.subdirectory,
+            userId: user.id,
+          },
+        });
+  
+        return redirect("/dashboard/sites");
+      } else {
+        // user alredy has one site dont allow
+        return redirect("/dashboard/pricing");
+      }
+    } else if (subStatus.status === "active") {
+      // User has a active plan he can create sites...
+      const submission = await parseWithZod(formData, {
+        schema: SiteCreationSchema({
+          async isSubdirectoryUnique() {
             const exisitngSubDirectory = await prisma.site.findUnique({
               where: {
                 subdirectory: formData.get("subdirectory") as string,
               },
             });
             return !exisitngSubDirectory;
-          }
+          },
         }),
-        async:true
-    });
-    if(submission.status!=="success"){
+        async: true,
+      });
+  
+      if (submission.status !== "success") {
         return submission.reply();
-    }
-    await prisma.site.create({
+      }
+  
+      await prisma.site.create({
         data: {
           description: submission.value.description,
           name: submission.value.name,
@@ -31,9 +88,10 @@ export async function createSiteAction(prevState: any, formData: FormData){
         },
       });
       return redirect("/dashboard/sites");
-}
+    }
+  }
 
-export async function createPostAction(prevState:any,formData:FormData){
+export async function createPostAction(prevState:unknown,formData:FormData){
   const user = await requireUser();
 
   const submission = parseWithZod(formData, {
@@ -58,7 +116,7 @@ export async function createPostAction(prevState:any,formData:FormData){
   return redirect(`/dashboard/sites/${formData.get("siteId")}`);
 }
 
-export async function editPostActions(prevState:any,formData:FormData){
+export async function editPostActions(prevState:unknown,formData:FormData){
   const user = await requireUser();
 
   const submission = parseWithZod(formData, {
@@ -125,3 +183,56 @@ export async function deleteSite(formData: FormData) {
 
   return redirect("/dashboard/sites");
 }
+
+export async function createSubscription(){
+  const user = await requireUser();
+  let stripeUserId = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    select: {
+      customerId: true,
+      email: true,
+      firstName: true,
+    },
+  });
+  if (!stripeUserId?.customerId) {
+    const stripeCustomer = await stripe.customers.create({
+      email: stripeUserId?.email,
+      name: stripeUserId?.firstName,
+    });
+
+    stripeUserId = await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        customerId: stripeCustomer.id,
+      },
+    });
+  }
+  const session = await stripe.checkout.sessions.create({
+    customer: stripeUserId.customerId as string,
+    mode: "subscription",
+    billing_address_collection: "auto",
+    payment_method_types: ["card"],
+    line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+    customer_update: {
+      address: "auto",
+      name: "auto",
+    },
+    success_url:
+      process.env.NODE_ENV === "production"
+        ? ""
+        : "http://localhost:3000/dashboard/payment/success",
+    cancel_url:
+      process.env.NODE_ENV === "production"
+        ? ""
+        : "http://localhost:3000/dashboard/payment/cancelled",
+  });
+
+  return redirect(session.url as string);
+}
+
+
+

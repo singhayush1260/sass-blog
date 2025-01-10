@@ -10,7 +10,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { PlusCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import Defaultimage from "@/public/default.png";
 import EmptyState from "@/app/components/dashboard/empty-state";
 import prisma from "@/app/utils/db";

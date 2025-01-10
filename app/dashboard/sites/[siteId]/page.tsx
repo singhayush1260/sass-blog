@@ -28,7 +28,6 @@ import {
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import {
   Book,
-  FileIcon,
   MoreHorizontal,
   PlusCircle,
   Settings,

@@ -16,7 +16,7 @@ export const PostSchema = z.object({
 });
 
 export function SiteCreationSchema(options?: {
-  isSubdirectoryUnique: () => Promise<Boolean>;
+  isSubdirectoryUnique: () => Promise<boolean>;
 }) {
   return z.object({
     subdirectory: z
